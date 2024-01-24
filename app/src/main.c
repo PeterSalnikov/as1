@@ -16,15 +16,26 @@ int main()
 
     // Initialize all modules; HAL modules first
     button_init();
-    struct LED leds = led_init();
-    int brightnessChanged = fprintf(leds.brightness,"1");
-    if(brightnessChanged <= 0)
-        printf("are you happy now\n");
+    struct LED *leds = led_init();
+
+// testing out some functions
+    for(int i = 0; i < NUM_LEDS; i++) {
+
+        // int brightnessChanged = fprintf(leds[i].brightness,"%d",i % 2);
+        led_setTrigger(leds[i].trigger,"none");
+
+        led_setBrightness(leds[i].brightness,"0");
+    }
+
     // led_cleanup(leds);
     // Main program logic:
     // Print a "get ready" message and turn on the middle two LEDs on BBG.
     printf("Get Ready..!");
+    for(int i = 1; i < 3; i++) {
+        led_setBrightness(leds[i].brightness, "1");
+    }
 
+    // if the user is pressing the joystick, tell them "Please let go of joystick" and wait until the joystick is not pressing.
 
     button_cleanup();
 
