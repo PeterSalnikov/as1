@@ -13,7 +13,7 @@
 static void sleepForMs(long long delayInMs)
 {
     const long long NS_PER_MS = 1000 * 1000;
-    const long long NS_PER_SECOND = 100000000;
+    const long long NS_PER_SECOND = 1000000000;
 
     long long delayNs = delayInMs * NS_PER_MS;
     int seconds = delayNs / NS_PER_SECOND;
@@ -28,6 +28,11 @@ int main()
 {
     // Initialize all modules; HAL modules first
     button_init();
+    // printf("here");
+
+    joystick_init();
+
+    
 
 // testing out some functions
     for(int i = 0; i < NUM_LEDS; i++) {
@@ -40,9 +45,17 @@ int main()
 
     // Main program logic:-
     // // Print a "get ready" message and turn on the middle two LEDs on BBG.
+
+    printf("Game begins in...\n");
+
+    for(int i = 5; i > 0; i--) {
+        printf("%d!\n",i);
+        sleepForMs(1000);
+    }
     printf("Get Ready..!");
+
     for(int i = 1; i < 3; i++) {
-        led_setBrightness(i, "0");
+        led_setBrightness(i, "1");
     }
 
     // // if the user is pressing the joystick, tell them "Please let go of joystick" and wait until the joystick is not pressing.
@@ -53,15 +66,16 @@ int main()
             led_setBrightness(i, "0");
         }
 
-        sleepForMs(100);
+        // sleepForMs(100);
         
-        joystick_getCurrentDirection();
+        // enum Direction dir = joystick_getCurrentDirection(joystick_inds);
+        printf("%d",joystick_getCurrentDirection());
 
         for(int i = 1; i < 3; i++) {
             led_setBrightness(i, "1");
         }
 
-        sleepForMs(100);
+        // sleepForMs(100);
 
     }
 
