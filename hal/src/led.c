@@ -1,106 +1,50 @@
 #include "hal/led.h"
 
-struct LED *led_init()
+FILE *led_openFile(int led_num, char *file_type)
 {
-    int buf = 50;
-    struct LED *led = malloc(sizeof(struct LED) * NUM_LEDS);
+    char path[sizeof(file_type)*strlen(file_type)];
+    char loc[LED_BUF];
+    snprintf(path, sizeof(path),"%d/%s",led_num,file_type);
+    snprintf(loc,sizeof(loc),"%s%s",BBG_LED_DIR,path);
 
-    char bbg_led_path[37] = "/sys/class/leds/beaglebone:green:usr";
+    FILE *file = fopen(loc,"w");
 
-    for(int i = 0; i < NUM_LEDS; i++) {
-
-        char trigger_path[10];
-        char brightness_path[13];
-        
-        char trigger_loc[buf];
-        char brightness_loc[buf];
-
-        sprintf(trigger_path,"%d/trigger",i);
-        snprintf(trigger_loc,sizeof(trigger_loc),"%s%s",bbg_led_path,trigger_path);
-
-        sprintf(brightness_path,"%d/brightness",i);
-        snprintf(brightness_loc,sizeof(brightness_loc),"%s%s",bbg_led_path,brightness_path);
-
-
-        led[i].trigger = fopen(trigger_loc,"w");
-        if(led[i].trigger == NULL) {
-            printf("ERROR: led_init(): led%d trigger file unable to open\n",i);
-            exit(1);
-        }
-        led[i].brightness = fopen(brightness_loc,"w");
-        if(led[i].brightness == NULL) {
-            printf("ERROR: led_init(): led%d brightness file unable to open\n",i);
-            exit(1);
-        }
-    }
-
-    return led;
-}
-
-void led_setTrigger(char *pLedTriggerFile, char *state)
-{
-    // if(pLedTriggerFile == NULL) {
-    //     printf("ERROR: led_setTrigger: FILE DOES NOT EXIST\n");
-    //     exit(1);
-    // }
-    // ssize_t bytes_written = write(pLedTriggerFile, state, strlen(state));
-    // printf("%s",state);
-    // const char *new_trigger = "none";
-    // memcpy(pLedTriggerFile, new_trigger, strlen(new_trigger));
-    for(size_t i = 0; i < strlen(state); i++) {
-        pLedTriggerFile[i] = state[i];
-    }
-    // snprintf(pLedTriggerFile,sizeof(*pLedTriggerFile)*1000, state);
-
-
-    // int setTrigger = fprintf(pLedTriggerFile, "%s", state);
-    // if(setTrigger <= 0) {
-    //     printf("ERROR: led_setTrigger: Something went wrong when modifying trigger.\n");
-    //     exit(1);
-    // }
-}
-
-void led_setBrightness(FILE * pLedBrightnessFile, char *level)
-{
-    if(pLedBrightnessFile == NULL) {
-        printf("ERROR: led_setBrightness: FILE DOES NOT EXIST\n");
+    if(file == NULL) {
+        printf("ERROR: led_open_file: unable to open %s for %d\n",file_type,led_num);
         exit(1);
     }
+    return file;
+}
 
-    int setBrightness = fprintf(pLedBrightnessFile, "%s", level);
+void led_close_file(FILE *led_file) {
+    if(led_file)
+    {
+        fclose(led_file);
+    }
+}
+
+void led_setTrigger(int led_num, char *state)
+{
+
+    FILE *trigger_file = led_openFile(led_num,"trigger");
+    int set_trigger = fprintf(trigger_file, "%s", state);
+    if(set_trigger <= 0) {
+        printf("ERROR: led_setTrigger: Something went wrong in setting trigger.\n");
+        exit(1);
+    }
+    led_close_file(trigger_file);
+
+}
+
+void led_setBrightness(int led_num, char *level)
+{
+    FILE *brightness_file = led_openFile(led_num,"brightness");
+
+    int setBrightness = fprintf(brightness_file, "%s", level);
     if(setBrightness <= 0)
     {
         printf("ERROR: led_setBrightness: Something went wrong when modifying brightness.\n");
         exit(1);
     }
-}
-
-// void led_setTrigger(char *file, char *state)
-// {
-//     FILE *pLedTriggerFile = fopen(file, 'w');
-//     if(pLedTriggerFile == NULL)
-//     {
-//         printf("ERROR OPENING %s.\n",file);
-//         exit(1);
-//     }
-//     int charWritten = fprintf(pLedTriggerFile, "%s",state);
-//     if(charWritten <= 0)
-//     {
-//         printf("ERROR WRITING DATA\n");
-//         exit(1);
-//     }
-//     fclose(pLedTriggerFile);
-
-// }
-
-
-void led_cleanup(struct LED *led)
-{
-    if(led) {
-        for(int i = 0; i < NUM_LEDS; i++) {
-            // fclose(led[i].trigger);
-            fclose(led[i].brightness);
-        }
-        free(led);
-    }
+    led_close_file(brightness_file);
 }

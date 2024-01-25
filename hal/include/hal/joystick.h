@@ -12,6 +12,12 @@ cat /sys/class/gpio/gpio27/value
 */
 #include<stdio.h>
 #include<stdlib.h>
+#include<stdbool.h>
+
+#include<sys/mman.h>
+#include<fcntl.h>
+#include<sys/stat.h>
+#include<unistd.h>
 
 enum Direction {
     UP = 26,
