@@ -5,86 +5,86 @@
 #include <stdbool.h>
 #include "badmath.h"
 #include "hal/button.h"
-
+#include "hal/led.h"
+#include "hal/joystick.h"
 #include<time.h>
 #include<stdlib.h>
-#define DA_TRIGGER_FILE_NAME_HERE "/sys/class/leds/beaglebone:green:usr0/trigger"
-#define DA_BRIGHTNESS_FILE_NAME_HERE "/sys/class/leds/beaglebone:green:usr0/brightness"
+
+static void sleepForMs(long long delayInMs)
+{
+    const long long NS_PER_MS = 1000 * 1000;
+    const long long NS_PER_SECOND = 100000000;
+
+    long long delayNs = delayInMs * NS_PER_MS;
+    int seconds = delayNs / NS_PER_SECOND;
+    int nanoseconds = delayNs % NS_PER_SECOND;
+    struct timespec reqDelay = {seconds, nanoseconds};
+    nanosleep(&reqDelay, (struct timespec *) NULL);
+}
+
+void joystick_getCurrentDirection()
+{
+    // just a 5-way conditional that sees whose value is 0, if any?
+    // run this in an event loop and react to the value it changes to?
+    FILE *up = fopen("/sys/class/gpio/gpio26/value","r");
+    if(up == NULL) {
+        printf("ERROR: joystick_getCurrentDirection: \"UP\" binding not found\n");
+        exit(1);
+    }
+    printf("%c\n",fgetc(up));
+    fclose(up);
+    // return NONE;
+}
+
 int main()
 {
-    // printf("Hello world!\n");
-    printf("Hello embedded world, from Peter!\n");
-
     // Initialize all modules; HAL modules first
     button_init();
-    badmath_init();
-    // Main program logic:
-    // for (int i = 0; i < 10; i++) {
-    //     printf("  -> Reading button time %d = %d\n", i, button_is_button_pressed());
-    // }
+    // printf("here");
+    struct LED *leds = led_init();
 
-    // for (int i = 0; i <= 35; i++) {
-    //     int ans = badmath_factorial(i);
-    //     printf("%4d! = %6d\n", i, ans);
-    // }
+// testing out some functions
+    for(int i = 0; i < NUM_LEDS; i++) {
 
-    FILE *pLedTriggerFile = fopen(DA_TRIGGER_FILE_NAME_HERE, "w");
-    FILE *pLedBrightnessFile = fopen(DA_BRIGHTNESS_FILE_NAME_HERE, "w");
+        // int brightnessChanged = fprintf(leds[i].brightness,"%d",i % 2);
+        led_setTrigger(leds[i].trigger,"none");
 
-    if(pLedTriggerFile == NULL) {
-        printf("ERROR OPENING %s.", DA_TRIGGER_FILE_NAME_HERE);
-        exit(1);
-    }
-    if(pLedBrightnessFile == NULL) {
-        printf("ERROR OPENING %s.", DA_TRIGGER_FILE_NAME_HERE);
-        exit(1);
-    }
-    int charWritten = fprintf(pLedTriggerFile, "none");
-    if(charWritten <= 0) {
-        printf("ERROR WRITING DATA");
-        exit(1);
+        led_setBrightness(leds[i].brightness,"0");
     }
 
-    int brightnessChanged = fprintf(pLedBrightnessFile, "0");
-    if(brightnessChanged <= 0) {
-        printf("ERROR WRITING DATA");
-        exit(1);
-    }
-    printf("LED modified successfully\n");
-    fclose(pLedTriggerFile);
-    fclose(pLedBrightnessFile);
-
-    printf("Timing Test\n");
-
-    for(int i = 0; i < 5; i++) {
-        long seconds = 1;
-        long nanoseconds = 500000000;
-        struct timespec reqDelay = {seconds, nanoseconds};
-        nanosleep(&reqDelay, (struct timespec *) NULL);
-        printf("Delayed print %d.\n", i);
+    // led_cleanup(leds);
+    // Main program logic:-
+    // // Print a "get ready" message and turn on the middle two LEDs on BBG.
+    printf("Get Ready..!");
+    for(int i = 1; i < 3; i++) {
+        led_setBrightness(leds[i].brightness, "0");
     }
 
-    // Cleanup all modules (HAL modules last)
-    badmath_cleanup();
+    // // if the user is pressing the joystick, tell them "Please let go of joystick" and wait until the joystick is not pressing.
+
+    while(1) {
+        leds = led_init();
+        for(int i = 1; i < 3; i++) {
+            led_setBrightness(leds[i].brightness, "0");
+        }
+        led_cleanup(leds);
+        sleepForMs(100);
+        
+        joystick_getCurrentDirection();
+        leds = led_init();
+        for(int i = 1; i < 3; i++) {
+            led_setBrightness(leds[i].brightness, "1");
+        }
+        led_cleanup(leds);
+        sleepForMs(100);
+
+    }
+
+
     button_cleanup();
 
     printf("!!! DONE !!!\n"); 
 
-    // Some bad code to try out and see what shows up.
-    #if 0
-        // Test your linting setup
-        //   - You should see a warning underline in VS Code
-        //   - You should see compile-time errors when building (-Wall -Werror)
-        // (Linting using clang-tidy; see )
-        int x = 0;
-        if (x = 10) {
-        }
-    #endif
-    #if 0
-        // Demonstrate -fsanitize=address (enabled in the root CMakeFiles.txt)
-        // Compile and run this code. Should see warning at compile time; error at runtime.
-        int data[3];
-        data[3] = 10;
-        printf("Value: %d\n", data[3]);
-    #endif
+    return 0;
+
 }

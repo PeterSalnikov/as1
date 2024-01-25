@@ -1,5 +1,10 @@
 {
     "files.associations": {
-        "stdio.h": "c"
-    }
+        "stdio.h": "c",
+        "led.h": "c",
+        "stdlib.h": "c",
+        "time.h": "c",
+        "assert.h": "c"
+    },
+    "C_Cpp.errorSquiggles": "enabled"
 }
