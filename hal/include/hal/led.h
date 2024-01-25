@@ -5,6 +5,11 @@
 #include<stdlib.h>
 #include<string.h>
 
+#include<sys/mman.h>
+#include<fcntl.h>
+#include<sys/stat.h>
+#include<unistd.h>
+
 #define LED0_TRIGGER "/sys/class/leds/beaglebone:green:usr0/trigger"
 #define LED0_BRIGHTNESS "/sys/class/leds/beaglebone:green:usr0/brightness"
 
@@ -22,7 +27,7 @@
 
 struct LED {
 
-    FILE *trigger;
+    char *trigger;
     FILE *brightness;
 
 };
@@ -30,7 +35,7 @@ struct LED {
 
 struct LED *led_init();
 
-void led_setTrigger(FILE *pLedTriggerFile, char *state);
+void led_setTrigger(char *pLedTriggerFile, char *state);
 void led_setBrightness(FILE *pLedBrightnessFile, char *level);
 
 void led_cleanup();

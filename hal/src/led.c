@@ -1,7 +1,5 @@
 #include "hal/led.h"
 
-
-
 struct LED *led_init()
 {
     int buf = 50;
@@ -25,25 +23,41 @@ struct LED *led_init()
 
 
         led[i].trigger = fopen(trigger_loc,"w");
+        if(led[i].trigger == NULL) {
+            printf("ERROR: led_init(): led%d trigger file unable to open\n",i);
+            exit(1);
+        }
         led[i].brightness = fopen(brightness_loc,"w");
-
+        if(led[i].brightness == NULL) {
+            printf("ERROR: led_init(): led%d brightness file unable to open\n",i);
+            exit(1);
+        }
     }
 
     return led;
 }
 
-void led_setTrigger(FILE *pLedTriggerFile, char *state)
+void led_setTrigger(char *pLedTriggerFile, char *state)
 {
-    if(pLedTriggerFile == NULL) {
-        printf("ERROR: led_setTrigger: FILE DOES NOT EXIST\n");
-        exit(1);
+    // if(pLedTriggerFile == NULL) {
+    //     printf("ERROR: led_setTrigger: FILE DOES NOT EXIST\n");
+    //     exit(1);
+    // }
+    // ssize_t bytes_written = write(pLedTriggerFile, state, strlen(state));
+    // printf("%s",state);
+    // const char *new_trigger = "none";
+    // memcpy(pLedTriggerFile, new_trigger, strlen(new_trigger));
+    for(size_t i = 0; i < strlen(state); i++) {
+        pLedTriggerFile[i] = state[i];
     }
+    // snprintf(pLedTriggerFile,sizeof(*pLedTriggerFile)*1000, state);
 
-    int setTrigger = fprintf(pLedTriggerFile, "%s", state);
-    if(setTrigger <= 0) {
-        printf("ERROR: led_setTrigger: Something went wrong when modifying trigger.\n");
-        exit(1);
-    }
+
+    // int setTrigger = fprintf(pLedTriggerFile, "%s", state);
+    // if(setTrigger <= 0) {
+    //     printf("ERROR: led_setTrigger: Something went wrong when modifying trigger.\n");
+    //     exit(1);
+    // }
 }
 
 void led_setBrightness(FILE * pLedBrightnessFile, char *level)
@@ -80,13 +94,13 @@ void led_setBrightness(FILE * pLedBrightnessFile, char *level)
 // }
 
 
-void led_cleanup()
+void led_cleanup(struct LED *led)
 {
-    // if(led) {
-    //     for(int i = 0; i < NUM_LEDS; i++) {
-    //         fclose(led[i].trigger);
-    //         fclose(led[i].brightness);
-    //     }
-    //     free(led);
-    // }
+    if(led) {
+        for(int i = 0; i < NUM_LEDS; i++) {
+            // fclose(led[i].trigger);
+            fclose(led[i].brightness);
+        }
+        free(led);
+    }
 }
