@@ -1,6 +1,7 @@
-# CMPT 433 Sample Assignment Build Structure
+# CMPT 433 Assignment 1: Der-Finger-Poken, Der-Lighten-Blinken
 
-This is a working project that you can use as the basis for your assignments.
+'Bop-it'-style joystick game which measures the reaction time of a user pressing a joystick in the correct direction,
+Using a joystick Zencape attachment on a BeagleBone
 
 ## Sturcture
 
