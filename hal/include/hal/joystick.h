@@ -35,8 +35,14 @@ struct Joystick {
     enum Direction direction;
 };
 
+FILE *joystick_openGPIOFile(int dir_num, char *toOpen, char *perm);
+void joystick_closeGPIOFile(FILE *GPIOFile);
+
 void joystick_init();
-FILE *joystick_openFile(int dir_num);
+
+int i2j(int joystick_ind);
+int j2i(enum Direction joystick_direction);
+
 bool joystick_isPressed();
 
 enum Direction joystick_getCurrentDirection();
