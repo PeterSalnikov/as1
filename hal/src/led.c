@@ -1,57 +1,78 @@
 #include "hal/led.h"
+#include "utils.h"
 
-FILE *led_openFile(int led_num, char *file_type)
+// Everything surrounding LED functionality and I/O
+
+// fopen() and fclose() functions with parsing and error-handling built in 
+FILE *led_openFile(int ledNum, char *fileType)
 {
-    char path[sizeof(file_type)*strlen(file_type)];
+    char path[sizeof(fileType)*strlen(fileType)];
     char loc[LED_BUF];
-    snprintf(path, sizeof(path),"%d/%s",led_num,file_type);
+    snprintf(path, sizeof(path),"%d/%s",ledNum,fileType);
     snprintf(loc,sizeof(loc),"%s%s",BBG_LED_DIR,path);
 
     FILE *file = fopen(loc,"w");
 
     if(file == NULL) {
-        printf("ERROR: led_open_file: unable to open %s for %d\n",file_type,led_num);
+
+        printf("ERROR: led_open_file: unable to open %s for %d\n",fileType,ledNum);
         exit(1);
     }
     return file;
 }
 
-void led_close_file(FILE *led_file) {
-    if(led_file)
+void led_close_file(FILE *ledFile) {
+    if(ledFile)
     {
-        fclose(led_file);
+
+        fclose(ledFile);
     }
 }
 
-void led_setTrigger(int led_num, char *state)
+// function for setting trigger of LED. Only "none" is supported for this program
+void led_setTrigger(int ledNum, char *state)
 {
+    const char *supportedTriggerTypes[1] = {"none"};
+    if(utils_validateInput(state, supportedTriggerTypes,1) != 1) {
 
-    FILE *trigger_file = led_openFile(led_num,"trigger");
-    int set_trigger = fprintf(trigger_file, "%s", state);
-    if(set_trigger <= 0) {
+        perror("ERROR: led_setTrigger: Unsupported trigger type!\n");
+        exit(1);
+    }
+
+    FILE *triggerFile = led_openFile(ledNum,"trigger");
+    int setTrigger = fprintf(triggerFile, "%s", state);
+    if(setTrigger <= 0) {
+
         printf("ERROR: led_setTrigger: Something went wrong in setting trigger.\n");
         exit(1);
     }
-    led_close_file(trigger_file);
+    led_close_file(triggerFile);
 
 }
 
-void led_setBrightness(int led_num, char *level)
+void led_setBrightness(int ledNum, char *level)
 {
-    FILE *brightness_file = led_openFile(led_num,"brightness");
+    const char *supportedBrightnessLevels[2] = {"1","0"};
+    if(utils_validateInput(level, supportedBrightnessLevels,2) != true) {
 
-    int setBrightness = fprintf(brightness_file, "%s", level);
-    if(setBrightness <= 0)
-    {
+        perror("ERROR: led_setBrightness: Unsupported brightness level!\n");
+        exit(1);
+    }
+
+    FILE *brightnessFile = led_openFile(ledNum,"brightness");
+
+    int setBrightness = fprintf(brightnessFile, "%s", level);
+    if(setBrightness <= 0) {
         printf("ERROR: led_setBrightness: Something went wrong when modifying brightness.\n");
         exit(1);
     }
-    led_close_file(brightness_file);
+    led_close_file(brightnessFile);
 }
 
 void led_turnOffAll()
 {
     for(int i = 0; i < NUM_LEDS; i++) {
+
         led_setBrightness(i,"0");
     }
 }
@@ -59,21 +80,24 @@ void led_turnOffAll()
 void led_turnOnAll()
 {
     for(int i = 0; i < NUM_LEDS; i++) {
+
         led_setBrightness(i,"1");
     }
 }
-// could have/should have maybe used timer trigger here, but this seems to work fine for now.
-void led_flashAll(int freq, float duration)
+// Flashes ALL LEDs on and off at equal rates.
+// freq is measured in Hz, duration is measured in SECONDS
+void led_flashAll(int freqInHz, float numSeconds)
 {
-    float rate = (float)1 / (float)freq;
+    float rate = (float)1 / (float)freqInHz;
     float sum = 0.0;
-    float sleepFor = 1000.0 * rate;
+    float delayOnAndOff = 1000.0 * rate / (float)2;
 
-    while(sum < duration) {
+    while(sum < numSeconds) {
+        
         led_turnOnAll();
-        time_sleepForMs(sleepFor / (float)2);
+        time_sleepForMs(delayOnAndOff);
         led_turnOffAll();
-        time_sleepForMs(sleepFor / (float)2);
+        time_sleepForMs(delayOnAndOff);
         sum += rate;
     }
 }

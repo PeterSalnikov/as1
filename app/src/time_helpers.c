@@ -1,5 +1,7 @@
 #include "../include/time_helpers.h"
 
+// Instructor-provided functions to help with nanosleep.
+
 void time_sleepForMs(long long delayInMs)
 {
     const long long NS_PER_MS = 1000 * 1000;

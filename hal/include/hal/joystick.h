@@ -1,15 +1,3 @@
-/*
-echo Up:
-cat /sys/class/gpio/gpio26/value
-echo Right:
-cat /sys/class/gpio/gpio47/value
-echo Down:
-cat /sys/class/gpio/gpio46/value
-echo Left:
-cat /sys/class/gpio/gpio65/value
-echo Push-button:
-cat /sys/class/gpio/gpio27/value
-*/
 #include<stdio.h>
 #include<stdlib.h>
 #include<stdbool.h>
@@ -20,29 +8,28 @@ cat /sys/class/gpio/gpio27/value
 #include<sys/stat.h>
 #include<unistd.h>
 
+#ifndef JOYSTICK_H
+#define JOYSTICK_H
+
+#define NUM_JOYSTICK_DIRECTIONS 4
 #define JOYSTICK_BUF 50
 #define JOYSTICK_PATH "/sys/class/gpio/gpio"
 
 enum Direction {
     UP = 26,
     DOWN = 46,
-    RIGHT = 47,
     LEFT = 65,
+    RIGHT = 47,
     NONE = -1
 };
 
-struct Joystick {
-    enum Direction direction;
-};
 
-FILE *joystick_openGPIOFile(int dir_num, char *toOpen, char *perm);
+FILE *joystick_openGPIOFile(int dirNum, char *toOpen, char *perm);
 void joystick_closeGPIOFile(FILE *GPIOFile);
+void joystick_init(void);
+int i2j(int joystickInd);
+int j2i(enum Direction joystickDirection);
+bool joystick_isPressed(void);
+enum Direction joystick_getCurrentDirection(void);
 
-void joystick_init();
-
-int i2j(int joystick_ind);
-int j2i(enum Direction joystick_direction);
-
-bool joystick_isPressed();
-
-enum Direction joystick_getCurrentDirection();
+#endif

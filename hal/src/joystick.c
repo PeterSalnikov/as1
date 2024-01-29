@@ -1,10 +1,14 @@
 #include "hal/joystick.h"
 
+// Everything surrounding joystick functionality and I/O
+
 static bool is_initialized = false;
 
-int i2j(int joystick_ind)
+// i2j, j2i: helper functions to convert from enums to array indices
+// Not a fan of these as it is bad to scale for 8 directions, but for purpose of this game is alright
+int i2j(int joystickInd)
 {
-    switch(joystick_ind){
+    switch(joystickInd) {
         case 0:
             return UP;
         case 1:
@@ -18,10 +22,9 @@ int i2j(int joystick_ind)
     }
 }
 
-enum Direction j2i(int joystick_ind)
+enum Direction j2i(enum Direction joystickDirection)
 {
-    switch(joystick_ind)
-    {
+    switch(joystickDirection) {
         case UP:
             return 0;
         case DOWN:
@@ -35,6 +38,7 @@ enum Direction j2i(int joystick_ind)
     }
 }
 
+// fopen() and fclose() functions with parsing and error-handling built in 
 FILE *joystick_openGPIOFile(enum Direction direction, char *toOpen, char *perm)
 {
     char loc[JOYSTICK_BUF];
@@ -45,6 +49,7 @@ FILE *joystick_openGPIOFile(enum Direction direction, char *toOpen, char *perm)
     FILE *file = fopen(loc,perm);
 
     if(file == NULL) {
+
         printf("ERROR: joystick_openFile: unable to open gpio%d. Check that the pin is exported\n",direction);
         exit(1);
     }
@@ -54,10 +59,12 @@ FILE *joystick_openGPIOFile(enum Direction direction, char *toOpen, char *perm)
 void joystick_closeGPIOFile(FILE *file)
 {
     if(file) {
+        
         fclose(file);
     }
 }
 
+// Instructor provided code for running bash scripts from C
 static void runCommand(char *command)
 {
     // Execute the shell command (output into pipe)
@@ -81,36 +88,29 @@ static void runCommand(char *command)
     }
 }
 
-// configure all joystick pin's direction to be "in"
-void joystick_initDirection() 
+// Initialization: Make sure configurations are set and joystick directions set to "in"
+void joystick_init()
 {
-    for(int i = 0; i < 4; i++) {
+    runCommand("~/config-pins.sh");
+    // ensure that all joystick directions are set to "in"
+    for(size_t i = 0; i < NUM_JOYSTICK_DIRECTIONS; i++) {
+
         FILE *cur = joystick_openGPIOFile(i2j(i),"direction", "w");
         fprintf(cur, "%s","in");
         joystick_closeGPIOFile(cur);
     }
-}
-
-void joystick_init()
-{
-    // I tried mmaps. I think I got close but in the interest of time will
-    // hold off on using them here. I think all that I needed for them to work was
-    // the location of the starting addresses of the respective GPIO pins as
-    // they could not be found. I believe that these are located in Derek Molloy's BBG GPIO schematic?
-    // runCommand("/home/debian/config-pins.sh");
-    runCommand("~/config-pins.sh");
-    joystick_initDirection();
-
 
     is_initialized = true;   
 }
 
-
+// if the joystick is pressed in any direction return true
 bool joystick_isPressed()
 {
-    for(int i = 0; i < 4; i++) {
+    for(size_t i = 0; i < NUM_JOYSTICK_DIRECTIONS; i++) {
+
         FILE *cur = joystick_openGPIOFile(i2j(i),"value", "r");
         if(fgetc(cur)=='0') {
+
             joystick_closeGPIOFile(cur);
             return true;
         }
@@ -118,17 +118,20 @@ bool joystick_isPressed()
     }
     return false;
 }
-
+// If any, return the direction in which the joystick is pressed
 enum Direction joystick_getCurrentDirection()
 {
     if(!is_initialized) {
+
         printf("joystick module not initialized\n");
         exit(1);
     }
 
-    for(int i = 0; i < 4; i++) {
+    for(size_t i = 0; i < NUM_JOYSTICK_DIRECTIONS; i++) {
+
         FILE *cur = joystick_openGPIOFile(i2j(i),"value", "r");
         if(fgetc(cur)=='0') {
+
             joystick_closeGPIOFile(cur);
             return i2j(i);
         }
