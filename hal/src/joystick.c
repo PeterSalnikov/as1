@@ -4,9 +4,18 @@
 
 static bool is_initialized = false;
 
-// i2j, j2i: helper functions to convert from enums to array indices
-// Not a fan of these as it is bad to scale for 8 directions, but for purpose of this game is alright
-int i2j(int joystickInd)
+// Helpers to work within joystick.c
+static enum Direction i2j(int joystickInd);
+static FILE *joystick_openGPIOFile(int dirNum, char *toOpen, char *perm);
+static void joystick_closeGPIOFile(FILE *GPIOFile);
+
+// This is here because only joystick uses it at the moment, but with a different project should probably move it to utils
+static void runCommand(char *command);
+
+// i2j: helper function to convert from loop index to a joystick direction.
+// The order of the directions does not matter, but...
+// Not a fan of these as it is bad to scale for 8 directions. For purpose of this game is alright
+static enum Direction i2j(int joystickInd)
 {
     switch(joystickInd) {
         case 0:
@@ -22,24 +31,8 @@ int i2j(int joystickInd)
     }
 }
 
-enum Direction j2i(enum Direction joystickDirection)
-{
-    switch(joystickDirection) {
-        case UP:
-            return 0;
-        case DOWN:
-            return 1;
-        case RIGHT:
-            return 2;
-        case LEFT:
-            return 3;
-        default:
-            return -1;
-    }
-}
-
 // fopen() and fclose() functions with parsing and error-handling built in 
-FILE *joystick_openGPIOFile(enum Direction direction, char *toOpen, char *perm)
+static FILE *joystick_openGPIOFile(enum Direction direction, char *toOpen, char *perm)
 {
     char loc[JOYSTICK_BUF];
     snprintf(loc,sizeof(loc),"%s%d/%s",JOYSTICK_PATH,direction,toOpen);
@@ -56,7 +49,7 @@ FILE *joystick_openGPIOFile(enum Direction direction, char *toOpen, char *perm)
     return file;
 }
 
-void joystick_closeGPIOFile(FILE *file)
+static void joystick_closeGPIOFile(FILE *file)
 {
     if(file) {
         

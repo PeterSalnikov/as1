@@ -3,8 +3,13 @@
 
 // Everything surrounding LED functionality and I/O
 
+// Helpers to work within led.c
+static FILE *led_openFile(int ledNum, char *fileType);
+static void led_close_file(FILE *ledFile);
+
+
 // fopen() and fclose() functions with parsing and error-handling built in 
-FILE *led_openFile(int ledNum, char *fileType)
+static FILE *led_openFile(int ledNum, char *fileType)
 {
     char path[sizeof(fileType)*strlen(fileType)];
     char loc[LED_BUF];
@@ -21,7 +26,7 @@ FILE *led_openFile(int ledNum, char *fileType)
     return file;
 }
 
-void led_close_file(FILE *ledFile) {
+static void led_close_file(FILE *ledFile) {
     if(ledFile)
     {
 
